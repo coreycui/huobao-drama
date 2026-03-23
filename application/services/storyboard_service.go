@@ -346,6 +346,20 @@ func (s *StoryboardService) GenerateStoryboard(episodeID string, model string) (
 
 // processStoryboardGeneration 后台处理故事板生成
 func (s *StoryboardService) processStoryboardGeneration(taskID, episodeID, model, prompt string) {
+	// 获取 drama style
+	dramaStyle := ""
+	var ep struct {
+		DramaID string
+	}
+	if err := s.db.Table("episodes").Select("drama_id").Where("id = ?", episodeID).Scan(&ep).Error; err == nil && ep.DramaID != "" {
+		var drama struct {
+			Style string
+		}
+		if err := s.db.Table("dramas").Select("style").Where("id = ?", ep.DramaID).Scan(&drama).Error; err == nil {
+			dramaStyle = drama.Style
+		}
+	}
+
 	// 更新任务状态为处理中
 	if err := s.taskService.UpdateTaskStatus(taskID, "processing", 10, "开始生成分镜头..."); err != nil {
 		s.log.Errorw("Failed to update task status", "error", err, "task_id", taskID)
@@ -474,7 +488,7 @@ func (s *StoryboardService) processStoryboardGeneration(taskID, episodeID, model
 }
 
 // generateImagePrompt 生成专门用于图片生成的提示词（首帧静态画面）
-func (s *StoryboardService) generateImagePrompt(sb Storyboard) string {
+func (s *StoryboardService) generateImagePrompt(sb Storyboard, style string) string {
 	var parts []string
 
 	// 1. 完整的场景背景描述
@@ -499,8 +513,14 @@ func (s *StoryboardService) generateImagePrompt(sb Storyboard) string {
 		parts = append(parts, sb.Emotion)
 	}
 
-	// 4. 动漫风格
-	parts = append(parts, "anime style, first frame")
+	// 4. 风格
+	if style == "realistic" {
+		parts = append(parts, "photorealistic, cinematic, first frame")
+	} else if style != "" {
+		parts = append(parts, style+" style, first frame")
+	} else {
+		parts = append(parts, "anime style, first frame")
+	}
 
 	if len(parts) > 0 {
 		return strings.Join(parts, ", ")
@@ -510,6 +530,7 @@ func (s *StoryboardService) generateImagePrompt(sb Storyboard) string {
 
 // extractInitialPose 提取初始静态姿态（去除动作过程）
 func extractInitialPose(action string) string {
+	var parts []string
 	// 去除动作过程关键词，保留初始状态描述
 	processWords := []string{
 		"然后", "接着", "接下来", "随后", "紧接着",
@@ -618,7 +639,7 @@ func extractCompositionType(shotType string) string {
 }
 
 // generateVideoPrompt 生成专门用于视频生成的提示词（包含运镜和动态元素）
-func (s *StoryboardService) generateVideoPrompt(sb Storyboard) string {
+func (s *StoryboardService) generateVideoPrompt(sb Storyboard, style string) string {
 	var parts []string
 	videoRatio := "16:9"
 	// 1. 人物动作
@@ -678,6 +699,11 @@ func (s *StoryboardService) generateVideoPrompt(sb Storyboard) string {
 	parts = append(parts, fmt.Sprintf("=VideoRatio: %s", videoRatio))
 	if len(parts) > 0 {
 		return strings.Join(parts, ". ")
+	}
+	if style == "realistic" {
+		return "Photorealistic cinematic video scene"
+	} else if style != "" {
+		return style + " style video scene"
 	}
 	return "Anime style video scene"
 }
@@ -767,8 +793,8 @@ func (s *StoryboardService) saveStoryboards(episodeID string, storyboards []Stor
 				sb.ShotType, sb.Movement, sb.Action, sb.Dialogue, sb.Result, sb.Emotion)
 
 			// 生成两种专用提示词
-			imagePrompt := s.generateImagePrompt(sb) // 专用于图片生成
-			videoPrompt := s.generateVideoPrompt(sb) // 专用于视频生成
+			imagePrompt := s.generateImagePrompt(sb, dramaStyle) // 专用于图片生成
+			videoPrompt := s.generateVideoPrompt(sb, dramaStyle) // 专用于视频生成
 
 			// 处理 dialogue 字段
 			var dialoguePtr *string
@@ -917,8 +943,17 @@ func (s *StoryboardService) CreateStoryboard(req *CreateStoryboardRequest) (*mod
 	}
 
 	// 生成提示词
-	imagePrompt := s.generateImagePrompt(sb)
-	videoPrompt := s.generateVideoPrompt(sb)
+	// 获取 drama style
+	dramaStyle := ""
+	var episode struct{ DramaID string }
+	if err := s.db.Table("episodes").Select("drama_id").Where("id = ?", req.EpisodeID).Scan(&episode).Error; err == nil && episode.DramaID != "" {
+		var drama struct{ Style string }
+		if err := s.db.Table("dramas").Select("style").Where("id = ?", episode.DramaID).Scan(&drama).Error; err == nil {
+			dramaStyle = drama.Style
+		}
+	}
+	imagePrompt := s.generateImagePrompt(sb, dramaStyle)
+	videoPrompt := s.generateVideoPrompt(sb, dramaStyle)
 
 	// 构建 description
 	desc := ""

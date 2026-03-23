@@ -47,15 +47,12 @@
           size="large"
           style="width: 100%"
         >
-          <el-option :label="$t('drama.styles.ghibli')" value="ghibli" />
-          <el-option :label="$t('drama.styles.guoman')" value="guoman" />
-          <el-option :label="$t('drama.styles.wasteland')" value="wasteland" />
-          <el-option :label="$t('drama.styles.nostalgia')" value="nostalgia" />
-          <el-option :label="$t('drama.styles.pixel')" value="pixel" />
-          <el-option :label="$t('drama.styles.voxel')" value="voxel" />
-          <el-option :label="$t('drama.styles.urban')" value="urban" />
-          <el-option :label="$t('drama.styles.guoman3d')" value="guoman3d" />
-          <el-option :label="$t('drama.styles.chibi3d')" value="chibi3d" />
+          <el-option
+            v-for="s in styleOptions"
+            :key="s.style_value"
+            :label="locale === 'zh' ? s.name_zh : s.name_en"
+            :value="s.style_value"
+          />
         </el-select>
       </el-form-item>
     </el-form>
@@ -80,11 +77,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { Plus } from "@element-plus/icons-vue";
 import { dramaAPI } from "@/api/drama";
+import { styleAPI, type ImageStyle } from "@/api/style";
 import type { CreateDramaRequest } from "@/types/drama";
 
 /**
@@ -101,8 +100,10 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const { locale } = useI18n();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
+const styleOptions = ref<ImageStyle[]>([]);
 
 // v-model binding / 双向绑定
 const visible = ref(props.modelValue);
@@ -120,7 +121,15 @@ watch(visible, (val) => {
 const form = reactive<CreateDramaRequest>({
   title: "",
   description: "",
-  style: "ghibli",
+  style: "",
+});
+
+onMounted(async () => {
+  try {
+    styleOptions.value = await styleAPI.list();
+  } catch {
+    // ignore
+  }
 });
 
 // Validation rules / 验证规则

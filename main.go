@@ -41,6 +41,16 @@ func main() {
 	}
 	logr.Info("Database tables migrated successfully")
 
+	// Seed default styles
+	if err := database.SeedDefaultStyles(db); err != nil {
+		logr.Warn("Failed to seed default styles", "error", err)
+	}
+
+	// 初始化默认数据
+	if err := database.SeedDatabase(db); err != nil {
+		logr.Warnw("Failed to seed database", "error", err)
+	}
+
 	// 初始化本地存储
 	var localStorage *storage.LocalStorage
 	if cfg.Storage.Type == "local" {

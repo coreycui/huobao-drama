@@ -74,9 +74,24 @@ export default {
     image: '图片',
     perPage: '每页'
   },
+  styleManagement: {
+    title: '风格管理',
+    addStyle: '添加风格',
+    editStyle: '编辑风格',
+    styleValue: '风格值',
+    styleValuePlaceholder: '如：ghibli',
+    nameZh: '中文名称',
+    nameZhPlaceholder: '如：吉卜力',
+    nameEn: '英文名称',
+    nameEnPlaceholder: 'e.g., Ghibli',
+    sortOrder: '排序',
+    active: '启用',
+    inactive: '禁用'
+  },
   settings: {
     title: '设置',
     aiConfig: 'AI配置',
+    styleManagement: '风格管理',
     general: '通用设置',
     systemLanguage: '系统语言',
     currentLanguage: '当前语言',
@@ -153,17 +168,6 @@ export default {
     projectDescPlaceholder: '请输入项目描述（可选）',
     style: '风格',
     stylePlaceholder: '请选择风格',
-    styles: {
-      ghibli: '吉卜力',
-      guoman: '国漫',
-      wasteland: '末日废土',
-      nostalgia: '怀旧',
-      pixel: '像素艺术',
-      voxel: '方块世界',
-      urban: '都市',
-      guoman3d: '国漫3D',
-      chibi3d: 'Q版3D'
-    },
     deleteConfirm: '确定要删除这个项目吗？',
     noCover: '暂无封面',
     noDescription: '暂无描述',
