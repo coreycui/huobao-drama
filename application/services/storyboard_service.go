@@ -516,7 +516,6 @@ func (s *StoryboardService) generateImagePrompt(sb Storyboard, style string) str
 
 // extractInitialPose 提取初始静态姿态（去除动作过程）
 func extractInitialPose(action string) string {
-	var parts []string
 	// 去除动作过程关键词，保留初始状态描述
 	processWords := []string{
 		"然后", "接着", "接下来", "随后", "紧接着",
