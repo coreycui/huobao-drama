@@ -33,6 +33,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *logger.Logger, localStora
 	localStoragePtr := localStorage.(*storage2.LocalStorage)
 	transferService := services2.NewResourceTransferService(db, log)
 	promptI18n := services2.NewPromptI18n(cfg)
+	authHandler := handlers2.NewAuthHandler(log)
 	dramaHandler := handlers2.NewDramaHandler(db, cfg, log, nil)
 	aiConfigHandler := handlers2.NewAIConfigHandler(db, cfg, log)
 	scriptGenHandler := handlers2.NewScriptGenerationHandler(db, cfg, log)
@@ -56,10 +57,28 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, log *logger.Logger, localStora
 	settingsHandler := handlers2.NewSettingsHandler(cfg, log)
 	styleHandler := handlers2.NewStyleHandler(db, log)
 	propHandler := handlers2.NewPropHandler(db, cfg, log, aiService, imageGenService)
+	userHandler := handlers2.NewUserHandler(db, log)
 
 	api := r.Group("/api/v1")
 	{
 		api.Use(middlewares2.RateLimitMiddleware())
+
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/logout", authHandler.Logout)
+			auth.GET("/me", authHandler.Me)
+			auth.PUT("/password", authHandler.ChangePassword)
+		}
+
+		users := api.Group("/users")
+		{
+			users.GET("", userHandler.ListUsers)
+			users.POST("", userHandler.CreateUser)
+			users.GET("/:id", userHandler.GetUser)
+			users.PUT("/:id", userHandler.UpdateUser)
+			users.DELETE("/:id", userHandler.DeleteUser)
+		}
 
 		dramas := api.Group("/dramas")
 		{

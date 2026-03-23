@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/drama-generator/backend/api/handlers"
 	"github.com/drama-generator/backend/api/routes"
 	"github.com/drama-generator/backend/infrastructure/database"
 	"github.com/drama-generator/backend/infrastructure/storage"
@@ -35,6 +36,8 @@ func main() {
 	}
 	logr.Info("Database connected successfully")
 
+	handlers.InitAuthService(db, logr)
+
 	// 自动迁移数据库表结构
 	if err := database.AutoMigrate(db); err != nil {
 		logr.Fatal("Failed to migrate database", "error", err)
@@ -44,6 +47,10 @@ func main() {
 	// Seed default styles
 	if err := database.SeedDefaultStyles(db); err != nil {
 		logr.Warn("Failed to seed default styles", "error", err)
+	}
+
+	if err := database.SeedAdminUser(db); err != nil {
+		logr.Warnw("Failed to seed admin user", "error", err)
 	}
 
 	// 初始化默认数据

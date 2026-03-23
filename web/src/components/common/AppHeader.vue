@@ -18,7 +18,6 @@
 
         <!-- Right section: Actions + Right slot -->
         <div class="header-right">
-          
           <!-- Language Switcher | 语言切换 -->
           <LanguageSwitcher v-if="showLanguage" />
           
@@ -32,21 +31,83 @@
           </el-button>
           <!-- Right slot for business content (before actions) | 右侧插槽（在操作按钮前） -->
           <slot name="right" />
+
+          <el-dropdown v-if="authStore.isLoggedIn" trigger="click" @command="handleUserCommand">
+            <div class="user-trigger">
+              <el-avatar :size="34" class="user-avatar">
+                {{ usernameInitial }}
+              </el-avatar>
+              <div class="user-meta">
+                <span class="user-name">{{ authStore.user?.username }}</span>
+                <span class="user-role">{{ authStore.isAdmin ? $t('auth.admin') : $t('auth.user') }}</span>
+              </div>
+              <el-icon class="user-caret"><ArrowDown /></el-icon>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-if="authStore.isAdmin" command="user-management">
+                  {{ $t('settings.userManagement') }}
+                </el-dropdown-item>
+                <el-dropdown-item command="change-password">
+                  {{ $t('auth.changePassword') }}
+                </el-dropdown-item>
+                <el-dropdown-item divided command="logout">
+                  {{ $t('auth.logout') }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </div>
     </header>
     
     <!-- AI Config Dialog | AI 配置对话框 -->
     <AIConfigDialog v-model="showConfigDialog" @config-updated="emit('config-updated')" />
+
+    <el-dialog
+      v-model="passwordDialogVisible"
+      :title="$t('auth.changePassword')"
+      width="420px"
+      :close-on-click-modal="false"
+    >
+      <el-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-position="top">
+        <el-form-item :label="$t('auth.oldPassword')" prop="old_password">
+          <el-input
+            v-model="passwordForm.old_password"
+            type="password"
+            show-password
+            :placeholder="$t('auth.oldPasswordPlaceholder')"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('auth.newPassword')" prop="new_password">
+          <el-input
+            v-model="passwordForm.new_password"
+            type="password"
+            show-password
+            :placeholder="$t('auth.newPasswordPlaceholder')"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="passwordDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="passwordSubmitting" @click="handleChangePassword">
+          {{ $t('common.save') }}
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Setting } from '@element-plus/icons-vue'
+import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ArrowDown, Setting } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import ThemeToggle from './ThemeToggle.vue'
 import AIConfigDialog from './AIConfigDialog.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import { useAuthStore } from '@/stores/auth'
 
 /**
  * AppHeader - Global application header component
@@ -89,13 +150,78 @@ const emit = defineEmits<{
   (e: 'config-updated'): void
 }>()
 
+const router = useRouter()
+const authStore = useAuthStore()
+const { t } = useI18n()
+
 // AI Config dialog state | AI 配置对话框状态
 const showConfigDialog = ref(false)
+const passwordDialogVisible = ref(false)
+const passwordSubmitting = ref(false)
+const passwordFormRef = ref<FormInstance>()
+const passwordForm = reactive({
+  old_password: '',
+  new_password: ''
+})
+
+const passwordRules: FormRules = {
+  old_password: [{ required: true, message: t('auth.oldPasswordRequired'), trigger: 'blur' }],
+  new_password: [{ required: true, message: t('auth.newPasswordRequired'), trigger: 'blur' }]
+}
+
+const usernameInitial = computed(() => authStore.user?.username?.slice(0, 1).toUpperCase() || 'U')
 
 // Handle open AI config | 处理打开 AI 配置
 const handleOpenAIConfig = () => {
   showConfigDialog.value = true
   emit('open-ai-config')
+}
+
+const resetPasswordForm = () => {
+  passwordForm.old_password = ''
+  passwordForm.new_password = ''
+  passwordFormRef.value?.clearValidate()
+}
+
+const handleUserCommand = async (command: string) => {
+  if (command === 'user-management') {
+    router.push('/settings/users')
+    return
+  }
+
+  if (command === 'change-password') {
+    resetPasswordForm()
+    passwordDialogVisible.value = true
+    return
+  }
+
+  if (command === 'logout') {
+    await authStore.logout()
+    router.push('/login')
+  }
+}
+
+const handleChangePassword = async () => {
+  if (!passwordFormRef.value) {
+    return
+  }
+
+  const valid = await passwordFormRef.value.validate().catch(() => false)
+  if (!valid) {
+    return
+  }
+
+  passwordSubmitting.value = true
+  try {
+    await authStore.changePassword(passwordForm)
+    ElMessage.success(t('auth.passwordChanged'))
+    passwordDialogVisible.value = false
+    resetPasswordForm()
+  } catch (error: any) {
+    ElMessage.error(error?.message || t('auth.passwordChangeFailed'))
+  } finally {
+    passwordSubmitting.value = false
+  }
 }
 
 // Expose methods for external control | 暴露方法供外部控制
@@ -151,6 +277,54 @@ defineExpose({
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
+}
+
+.user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-primary);
+  border-radius: 999px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.user-trigger:hover {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, var(--accent) 0%, #06b6d4 100%);
+  color: #fff;
+  font-weight: 700;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.user-caret {
+  color: var(--text-secondary);
 }
 
 .logo {
@@ -256,6 +430,10 @@ defineExpose({
   
   .header-btn {
     padding: 8px;
+  }
+
+  .user-meta {
+    display: none;
   }
 
   :deep(.page-title h1),

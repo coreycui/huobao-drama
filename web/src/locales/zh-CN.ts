@@ -6,7 +6,8 @@ export default {
     videos: '视频管理',
     assets: '资源库',
     settings: '设置',
-    dramas: '短剧项目'
+    dramas: '短剧项目',
+    userManagement: '用户管理'
   },
   dashboard: {
     title: '🎬 Drama Generator',
@@ -72,7 +73,36 @@ export default {
     name: '名称',
     description: '描述',
     image: '图片',
-    perPage: '每页'
+    perPage: '每页',
+    refresh: '刷新',
+    actions: '操作'
+  },
+  auth: {
+    login: '登录',
+    logout: '退出登录',
+    loginTitle: '账户登录',
+    loginSubtitle: '请使用已创建的系统账户进入平台',
+    loginSuccess: '登录成功',
+    loginFailed: '登录失败',
+    username: '用户名',
+    usernamePlaceholder: '请输入用户名',
+    usernameRequired: '请输入用户名',
+    password: '密码',
+    passwordPlaceholder: '请输入密码',
+    passwordRequired: '请输入密码',
+    role: '角色',
+    roleRequired: '请选择角色',
+    admin: '管理员',
+    user: '普通用户',
+    changePassword: '修改密码',
+    oldPassword: '旧密码',
+    oldPasswordPlaceholder: '请输入旧密码',
+    oldPasswordRequired: '请输入旧密码',
+    newPassword: '新密码',
+    newPasswordPlaceholder: '请输入新密码',
+    newPasswordRequired: '请输入新密码',
+    passwordChanged: '密码修改成功',
+    passwordChangeFailed: '密码修改失败'
   },
   styleManagement: {
     title: '风格管理',
@@ -92,6 +122,7 @@ export default {
     title: '设置',
     aiConfig: 'AI配置',
     styleManagement: '风格管理',
+    userManagement: '用户管理',
     general: '通用设置',
     systemLanguage: '系统语言',
     currentLanguage: '当前语言',
@@ -102,6 +133,22 @@ export default {
     languageSwitchItem3: '已生成的内容不会自动更新，需要重新生成',
     language: '语言',
     theme: '主题'
+  },
+  userManagement: {
+    title: '用户管理',
+    subtitle: '管理系统账号、角色和登录权限',
+    createUser: '新增用户',
+    editUser: '编辑用户',
+    resetPassword: '重置密码',
+    passwordOptional: '不填写则保持原密码',
+    loadFailed: '加载用户列表失败',
+    createSuccess: '用户创建成功',
+    createFailed: '用户创建失败',
+    updateSuccess: '用户更新成功',
+    updateFailed: '用户更新失败',
+    deleteSuccess: '用户删除成功',
+    deleteFailed: '用户删除失败',
+    deleteConfirm: '确定删除用户“{username}”吗？'
   },
   aiConfig: {
     title: 'AI 服务配置',

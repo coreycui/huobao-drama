@@ -1,7 +1,17 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/auth/Login.vue'),
+    meta: {
+      public: true,
+      guestOnly: true
+    }
+  },
   {
     path: '/',
     name: 'DramaList',
@@ -71,6 +81,14 @@ const routes: RouteRecordRaw[] = [
     path: '/settings/style-management',
     name: 'StyleManagement',
     component: () => import('../views/settings/StyleManagement.vue')
+  },
+  {
+    path: '/settings/users',
+    name: 'UserManagement',
+    component: () => import('../views/settings/UserManagement.vue'),
+    meta: {
+      adminOnly: true
+    }
   }
 ]
 
@@ -79,6 +97,30 @@ const router = createRouter({
   routes
 })
 
-// 开源版本 - 无需认证
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore()
+  await authStore.ensureInitialized()
+
+  const isPublic = to.meta.public === true
+  const isGuestOnly = to.meta.guestOnly === true
+  const isAdminOnly = to.meta.adminOnly === true
+
+  if (isGuestOnly && authStore.isLoggedIn) {
+    return '/'
+  }
+
+  if (!isPublic && !authStore.isLoggedIn) {
+    return {
+      path: '/login',
+      query: {
+        redirect: to.fullPath
+      }
+    }
+  }
+
+  if (isAdminOnly && !authStore.isAdmin) {
+    return '/'
+  }
+})
 
 export default router

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/drama-generator/backend/domain/models"
 	"github.com/drama-generator/backend/pkg/config"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -121,6 +123,9 @@ func AutoMigrate(db *gorm.DB) error {
 
 		// 风格管理
 		&models.ImageStyle{},
+
+		// 用户认证
+		&models.User{},
 	)
 }
 
@@ -151,4 +156,29 @@ func seedDefaultStyles(db *gorm.DB) error {
 	}
 
 	return db.Create(&defaultStyles).Error
+}
+
+func SeedAdminUser(db *gorm.DB) error {
+	var user models.User
+	err := db.Where("username = ?", "admin").First(&user).Error
+	if err == nil {
+		return nil
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	adminUser := &models.User{
+		Username:     "admin",
+		PasswordHash: string(passwordHash),
+		Role:         "admin",
+		IsActive:     true,
+	}
+
+	return db.Create(adminUser).Error
 }
