@@ -143,16 +143,16 @@ func seedDefaultStyles(db *gorm.DB) error {
 	}
 
 	defaultStyles := []models.ImageStyle{
-		{NameZh: "吉卜力", NameEn: "Ghibli", StyleValue: "ghibli", SortOrder: 1, IsActive: true},
-		{NameZh: "国漫", NameEn: "Chinese Animation", StyleValue: "guoman", SortOrder: 2, IsActive: true},
-		{NameZh: "末日废土", NameEn: "Post-Apocalyptic", StyleValue: "wasteland", SortOrder: 3, IsActive: true},
-		{NameZh: "怀旧", NameEn: "Nostalgic", StyleValue: "nostalgia", SortOrder: 4, IsActive: true},
-		{NameZh: "像素艺术", NameEn: "Pixel Art", StyleValue: "pixel", SortOrder: 5, IsActive: true},
-		{NameZh: "方块世界", NameEn: "Voxel World", StyleValue: "voxel", SortOrder: 6, IsActive: true},
-		{NameZh: "都市", NameEn: "Urban", StyleValue: "urban", SortOrder: 7, IsActive: true},
-		{NameZh: "国漫3D", NameEn: "Chinese 3D Animation", StyleValue: "guoman3d", SortOrder: 8, IsActive: true},
-		{NameZh: "Q版3D", NameEn: "Chibi 3D", StyleValue: "chibi3d", SortOrder: 9, IsActive: true},
-		{NameZh: "真人写实", NameEn: "Realistic", StyleValue: "realistic", SortOrder: 10, IsActive: true},
+		{NameZH: "吉卜力", NameEN: "Ghibli", StyleValue: "ghibli", SortOrder: 1, IsActive: true},
+		{NameZH: "国漫", NameEN: "Chinese Animation", StyleValue: "guoman", SortOrder: 2, IsActive: true},
+		{NameZH: "末日废土", NameEN: "Post-Apocalyptic", StyleValue: "wasteland", SortOrder: 3, IsActive: true},
+		{NameZH: "怀旧", NameEN: "Nostalgic", StyleValue: "nostalgia", SortOrder: 4, IsActive: true},
+		{NameZH: "像素艺术", NameEN: "Pixel Art", StyleValue: "pixel", SortOrder: 5, IsActive: true},
+		{NameZH: "方块世界", NameEN: "Voxel World", StyleValue: "voxel", SortOrder: 6, IsActive: true},
+		{NameZH: "都市", NameEN: "Urban", StyleValue: "urban", SortOrder: 7, IsActive: true},
+		{NameZH: "国漫3D", NameEN: "Chinese 3D Animation", StyleValue: "guoman3d", SortOrder: 8, IsActive: true},
+		{NameZH: "Q版3D", NameEN: "Chibi 3D", StyleValue: "chibi3d", SortOrder: 9, IsActive: true},
+		{NameZH: "真人写实", NameEN: "Realistic", StyleValue: "realistic", SortOrder: 10, IsActive: true},
 	}
 
 	return db.Create(&defaultStyles).Error

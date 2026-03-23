@@ -125,7 +125,7 @@ func (s *StoryboardService) UpdateStoryboard(storyboardID string, updates map[st
 
 	// 只重新生成video_prompt
 	// image_prompt不自动更新，因为可能对应多张已生成的帧图片
-	videoPrompt := s.generateVideoPrompt(sb)
+	videoPrompt := s.generateVideoPrompt(sb, storyboard.Style)
 
 	updateData["video_prompt"] = videoPrompt
 
