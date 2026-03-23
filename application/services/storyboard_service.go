@@ -346,20 +346,6 @@ func (s *StoryboardService) GenerateStoryboard(episodeID string, model string) (
 
 // processStoryboardGeneration 后台处理故事板生成
 func (s *StoryboardService) processStoryboardGeneration(taskID, episodeID, model, prompt string) {
-	// 获取 drama style
-	dramaStyle := ""
-	var ep struct {
-		DramaID string
-	}
-	if err := s.db.Table("episodes").Select("drama_id").Where("id = ?", episodeID).Scan(&ep).Error; err == nil && ep.DramaID != "" {
-		var drama struct {
-			Style string
-		}
-		if err := s.db.Table("dramas").Select("style").Where("id = ?", ep.DramaID).Scan(&drama).Error; err == nil {
-			dramaStyle = drama.Style
-		}
-	}
-
 	// 更新任务状态为处理中
 	if err := s.taskService.UpdateTaskStatus(taskID, "processing", 10, "开始生成分镜头..."); err != nil {
 		s.log.Errorw("Failed to update task status", "error", err, "task_id", taskID)
@@ -787,6 +773,20 @@ func (s *StoryboardService) saveStoryboards(episodeID string, storyboards []Stor
 		// AI会直接返回scene_id，不需要在这里做字符串匹配
 
 		// 保存新的分镜头
+		// 获取 drama style
+		dramaStyle := ""
+		var dramaEp struct {
+			DramaID string
+		}
+		if err := s.db.Table("episodes").Select("drama_id").Where("id = ?", episodeID).Scan(&dramaEp).Error; err == nil && dramaEp.DramaID != "" {
+			var drama struct {
+				Style string
+			}
+			if err := s.db.Table("dramas").Select("style").Where("id = ?", dramaEp.DramaID).Scan(&drama).Error; err == nil {
+				dramaStyle = drama.Style
+			}
+		}
+
 		for _, sb := range storyboards {
 			// 构建描述信息，包含对话
 			description := fmt.Sprintf("【镜头类型】%s\n【运镜】%s\n【动作】%s\n【对话】%s\n【结果】%s\n【情绪】%s",
