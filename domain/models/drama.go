@@ -103,6 +103,7 @@ type Storyboard struct {
 	Action           *string        `gorm:"type:text" json:"action"`
 	Result           *string        `gorm:"type:text" json:"result"`
 	Atmosphere       *string        `gorm:"type:text" json:"atmosphere"`
+	Emotion          *string        `gorm:"type:text" json:"emotion"`
 	ImagePrompt      *string        `gorm:"type:text" json:"image_prompt"`
 	VideoPrompt      *string        `gorm:"type:text" json:"video_prompt"`
 	BgmPrompt        *string        `gorm:"type:text" json:"bgm_prompt"`

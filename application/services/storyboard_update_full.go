@@ -125,7 +125,19 @@ func (s *StoryboardService) UpdateStoryboard(storyboardID string, updates map[st
 
 	// 只重新生成video_prompt
 	// image_prompt不自动更新，因为可能对应多张已生成的帧图片
-	videoPrompt := s.generateVideoPrompt(sb, storyboard.Style)
+	dramaStyle := ""
+	var episode struct {
+		DramaID string
+	}
+	if err := s.db.Table("episodes").Select("drama_id").Where("id = ?", storyboard.EpisodeID).Scan(&episode).Error; err == nil && episode.DramaID != "" {
+		var drama struct {
+			Style string
+		}
+		if err := s.db.Table("dramas").Select("style").Where("id = ?", episode.DramaID).Scan(&drama).Error; err == nil {
+			dramaStyle = drama.Style
+		}
+	}
+	videoPrompt := s.generateVideoPrompt(sb, dramaStyle)
 
 	updateData["video_prompt"] = videoPrompt
 
