@@ -24,6 +24,13 @@
           <!-- Theme Toggle | 主题切换 -->
           <ThemeToggle v-if="showTheme" />
           
+          <!-- Style Management | 风格管理 -->
+          <router-link v-if="authStore.isAdmin" to="/settings/style-management" class="header-btn-link">
+            <el-button class="header-btn">
+              <el-icon><Setting /></el-icon>
+              <span class="btn-text">{{ $t('drama.styleManagement') }}</span>
+            </el-button>
+          </router-link>
           <!-- AI Config (Model Switch) | AI 配置（模型切换） -->
           <el-button v-if="showAIConfig" @click="handleOpenAIConfig" class="header-btn">
             <el-icon><Setting /></el-icon>
@@ -347,6 +354,10 @@ defineExpose({
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.header-btn-link {
+  text-decoration: none;
 }
 
 .header-btn {
