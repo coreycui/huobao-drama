@@ -11,6 +11,12 @@
         <div class="header-right">
           <LanguageSwitcher />
           <ThemeToggle />
+          <router-link to="/settings/style-management" class="header-btn-link">
+            <el-button class="header-btn">
+              <el-icon><Setting /></el-icon>
+              <span class="btn-text">{{ $t('drama.styleManagement') }}</span>
+            </el-button>
+          </router-link>
           <el-button @click="showAIConfig = true" class="header-btn">
             <el-icon><Setting /></el-icon>
             <span class="btn-text">{{ $t('drama.aiConfig') }}</span>
@@ -64,6 +70,9 @@ const showAIConfig = ref(false)
   height: 56px;
   max-width: 100%;
   margin: 0 auto;
+}
+.header-btn-link {
+  text-decoration: none;
 }
 .header-btn {
   border-radius: var(--radius-lg);
