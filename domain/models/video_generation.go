@@ -70,8 +70,9 @@ type VideoProvider string
 const (
 	VideoProviderRunway VideoProvider = "runway"
 	VideoProviderPika   VideoProvider = "pika"
-	VideoProviderDoubao VideoProvider = "doubao"
-	VideoProviderOpenAI VideoProvider = "openai"
+	VideoProviderDoubao  VideoProvider = "doubao"
+	VideoProviderOpenAI  VideoProvider = "openai"
+	VideoProviderSeedance VideoProvider = "seedance"
 )
 
 func (VideoGeneration) TableName() string {

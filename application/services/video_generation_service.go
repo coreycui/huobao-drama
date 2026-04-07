@@ -623,6 +623,10 @@ func (s *VideoGenerationService) getVideoClient(provider string, modelName strin
 		return video.NewPikaClient(baseURL, apiKey, model), nil
 	case "minimax":
 		return video.NewMinimaxClient(baseURL, apiKey, model), nil
+	case "seedance":
+		endpoint := "/video/generation"
+		queryEndpoint := "/video/generation/{taskId}"
+		return video.NewSeedanceClient(baseURL, apiKey, model, endpoint, queryEndpoint), nil
 	default:
 		return nil, fmt.Errorf("unsupported video provider: %s", provider)
 	}
