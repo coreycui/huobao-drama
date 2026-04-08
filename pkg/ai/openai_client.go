@@ -2,6 +2,7 @@ package ai
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,14 +26,15 @@ type ChatMessage struct {
 }
 
 type ChatCompletionRequest struct {
-	Model               string          `json:"model"`
-	Messages            []ChatMessage    `json:"messages"`
-	Temperature         float64         `json:"temperature,omitempty"`
-	MaxTokens           *int            `json:"max_tokens,omitempty"`
-	MaxCompletionTokens *int            `json:"max_completion_tokens,omitempty"`
-	TopP                float64         `json:"top_p,omitempty"`
-	Stream              bool            `json:"stream,omitempty"`
-	ResponseFormat      *ResponseFormat `json:"response_format,omitempty"`
+	Model               string                   `json:"model"`
+	Messages            []ChatMessage             `json:"messages"`
+	Temperature         float64                  `json:"temperature,omitempty"`
+	MaxTokens           *int                     `json:"max_tokens,omitempty"`
+	MaxCompletionTokens *int                     `json:"max_completion_tokens,omitempty"`
+	TopP                float64                  `json:"top_p,omitempty"`
+	Stream              bool                     `json:"stream,omitempty"`
+	ResponseFormat      *ResponseFormat          `json:"response_format,omitempty"`
+	ExtraBody           map[string]interface{}   `json:"-"`
 }
 
 type ResponseFormat struct {
@@ -99,6 +101,7 @@ func NewOpenAIClient(baseURL, apiKey, model, endpoint string) *OpenAIClient {
 					Timeout: 10 * time.Second,
 				}).DialContext,
 				ResponseHeaderTimeout: 180 * time.Second,
+				TLSNextProto: map[string]func(authority string, c *tls.Conn) http.RoundTripper{},
 			},
 		},
 	}
@@ -140,6 +143,19 @@ func (c *OpenAIClient) doChatRequest(req *ChatCompletionRequest) (*ChatCompletio
 	if err != nil {
 		fmt.Printf("OpenAI: Failed to marshal request: %v\n", err)
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// 如果有 ExtraBody，合并到 JSON
+	if req.ExtraBody != nil {
+		var body map[string]interface{}
+		json.Unmarshal(jsonData, &body)
+		for k, v := range req.ExtraBody {
+			body[k] = v
+		}
+		jsonData, err = json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request with extra_body: %w", err)
+		}
 	}
 
 	url := c.BaseURL + c.Endpoint
@@ -255,6 +271,17 @@ func WithTopP(topP float64) func(*ChatCompletionRequest) {
 func WithResponseFormatJSON() func(*ChatCompletionRequest) {
 	return func(req *ChatCompletionRequest) {
 		req.ResponseFormat = &ResponseFormat{Type: "json_object"}
+	}
+}
+
+func WithThinkingDisabled() func(*ChatCompletionRequest) {
+	return func(req *ChatCompletionRequest) {
+		if req.ExtraBody == nil {
+			req.ExtraBody = make(map[string]interface{})
+		}
+		req.ExtraBody["thinking"] = map[string]interface{}{
+			"type": "disabled",
+		}
 	}
 }
 

@@ -372,12 +372,17 @@ func (s *StoryboardService) processStoryboardGeneration(taskID, episodeID, model
 	}
 
 	if err != nil {
-		s.log.Errorw("Failed to generate storyboard", "error", err, "task_id", taskID)
+		s.log.Errorw("❌ AI storyboard generation failed", "error", err, "model", model, "task_id", taskID)
 		if updateErr := s.taskService.UpdateTaskError(taskID, fmt.Errorf("生成分镜头失败: %w", err)); updateErr != nil {
 			s.log.Errorw("Failed to update task error", "error", updateErr, "task_id", taskID)
 		}
 		return
 	}
+
+	s.log.Infow("✅ AI storyboard generation succeeded",
+		"response_length", len(text),
+		"response_preview", text[:min(200, len(text))],
+		"task_id", taskID)
 
 	// 更新任务进度
 	if err := s.taskService.UpdateTaskStatus(taskID, "processing", 50, "分镜头生成完成，正在解析结果..."); err != nil {
@@ -397,17 +402,19 @@ func (s *StoryboardService) processStoryboardGeneration(taskID, episodeID, model
 		// 成功解析为数组，包装为对象
 		result.Storyboards = storyboards
 		result.Total = len(storyboards)
+		s.log.Infow("✅ JSON parsed", "storyboard_count", result.Total, "task_id", taskID)
 		s.log.Infow("Parsed storyboard as array format", "count", len(storyboards), "task_id", taskID)
 	} else {
 		// 尝试解析为对象格式
 		if err := utils.SafeParseAIJSON(text, &result); err != nil {
-			s.log.Errorw("Failed to parse storyboard JSON in both formats", "error", err, "response", text[:min(500, len(text))], "task_id", taskID)
+			s.log.Errorw("❌ JSON parse failed", "error", err, "response_preview", text[:min(300, len(text))], "task_id", taskID)
 			if updateErr := s.taskService.UpdateTaskError(taskID, fmt.Errorf("解析分镜头结果失败: %w", err)); updateErr != nil {
 				s.log.Errorw("Failed to update task error", "error", updateErr, "task_id", taskID)
 			}
 			return
 		}
 		result.Total = len(result.Storyboards)
+		s.log.Infow("✅ JSON parsed", "storyboard_count", result.Total, "task_id", taskID)
 		s.log.Infow("Parsed storyboard as object format", "count", len(result.Storyboards), "task_id", taskID)
 	}
 

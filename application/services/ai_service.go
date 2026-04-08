@@ -424,6 +424,8 @@ func (s *AIService) GenerateText(prompt string, systemPrompt string, options ...
 
 	// 添加 JSON 结构化输出支持
 	options = append(options, ai.WithResponseFormatJSON())
+	// 禁用深度思考（doubao-seed 等模型默认开启 thinking）
+	options = append(options, ai.WithThinkingDisabled())
 
 	return client.GenerateText(prompt, systemPrompt, options...)
 }
