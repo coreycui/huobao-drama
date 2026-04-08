@@ -179,7 +179,7 @@ func (c *OpenAIClient) doChatRequest(req *ChatCompletionRequest) (*ChatCompletio
 	resp, err := c.HTTPClient.Do(httpReq)
 	if err != nil {
 		if strings.Contains(err.Error(), "timeout awaiting response headers") {
-			fmt.Printf("OpenAI: ⚠️ ResponseHeaderTimeout 180s exceeded for URL: %s\n", url)
+			fmt.Printf("OpenAI: ⚠️ ResponseHeaderTimeout 400s exceeded for URL: %s\n", url)
 		}
 		fmt.Printf("OpenAI: HTTP request failed: %v\n", err)
 		return nil, fmt.Errorf("failed to send request: %w", err)
