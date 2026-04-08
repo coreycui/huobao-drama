@@ -92,6 +92,9 @@ func (c *VolcesArkClient) GenerateVideo(imageURL, prompt string, opts ...VideoOp
 		model = options.Model
 	}
 
+	// 检测是否为 Seedance 2.0 模型
+	isSeedance2 := strings.Contains(strings.ToLower(model), "seedance-2-0")
+
 	// 构建prompt文本（包含duration和ratio参数）
 	promptText := prompt
 	if options.AspectRatio != "" {
@@ -156,25 +159,42 @@ func (c *VolcesArkClient) GenerateVideo(imageURL, prompt string, opts ...VideoOp
 		})
 	}
 
-	// 只有 seedance-1-5-pro 模型支持 generate_audio 参数
-	generateAudio := false
-	if strings.Contains(strings.ToLower(model), "seedance-1-5-pro") {
-		generateAudio = true
+	var jsonData []byte
+	var err error
+
+	if isSeedance2 {
+		// Seedance 2.0 格式
+		resolution := "720p"
+		if options.AspectRatio == "9:16" || options.AspectRatio == "16:9" {
+			resolution = "720p"
+		}
+		seedance2Req := map[string]interface{}{
+			"model":      model,
+			"content":    content,
+			"duration":   options.Duration,
+			"resolution": resolution,
+		}
+		jsonData, err = json.Marshal(seedance2Req)
+	} else {
+		// Seedance 1.x 格式
+		generateAudio := false
+		if strings.Contains(strings.ToLower(model), "seedance-1-5-pro") {
+			generateAudio = true
+		}
+		reqBody := VolcesArkRequest{
+			Model:         model,
+			Content:       content,
+			GenerateAudio: generateAudio,
+		}
+		jsonData, err = json.Marshal(reqBody)
 	}
 
-	reqBody := VolcesArkRequest{
-		Model:         model,
-		Content:       content,
-		GenerateAudio: generateAudio,
-	}
-
-	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
 	endpoint := c.BaseURL + c.Endpoint
-	fmt.Printf("[VolcesARK] Generating video - Endpoint: %s, FullURL: %s, Model: %s\n", c.Endpoint, endpoint, model)
+	fmt.Printf("[VolcesARK] Generating video - Endpoint: %s, FullURL: %s, Model: %s, Seedance2: %v\n", c.Endpoint, endpoint, model, isSeedance2)
 	fmt.Printf("[VolcesARK] Request body: %s\n", string(jsonData))
 
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonData))
