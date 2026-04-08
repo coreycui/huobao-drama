@@ -54,10 +54,10 @@ func NewDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to get database instance: %w", err)
 	}
 
-	// SQLite 连接池配置（限制并发连接数）
+	// SQLite 连接池配置（modernc.org/sqlite 驱动内部已做串行化，此处设置合理缓冲）
 	if cfg.Type == "sqlite" {
 		sqlDB.SetMaxIdleConns(1)
-		sqlDB.SetMaxOpenConns(1) // SQLite 单写入，限制为 1
+		sqlDB.SetMaxOpenConns(10) // 允许少量并发读，避免轮询被写操作阻塞
 	} else {
 		sqlDB.SetMaxIdleConns(cfg.MaxIdle)
 		sqlDB.SetMaxOpenConns(cfg.MaxOpen)
