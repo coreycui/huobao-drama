@@ -163,10 +163,6 @@ func (c *OpenAIClient) doChatRequest(req *ChatCompletionRequest) (*ChatCompletio
 	// 打印请求信息
 	fmt.Printf("OpenAI: Sending request to: %s\n", url)
 	fmt.Printf("OpenAI: BaseURL=%s, Endpoint=%s, Model=%s\n", c.BaseURL, c.Endpoint, c.Model)
-	requestPreview := string(jsonData)
-	if len(jsonData) > 300 {
-		requestPreview = string(jsonData[:300]) + "..."
-	}
 	fullRequestJSON := string(jsonData)
 	fmt.Printf("OpenAI: Request body (full, len=%d): %s\n", len(jsonData), fullRequestJSON)
 
