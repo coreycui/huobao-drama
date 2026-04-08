@@ -95,7 +95,7 @@ func NewOpenAIClient(baseURL, apiKey, model, endpoint string) *OpenAIClient {
 		Model:    model,
 		Endpoint: endpoint,
 		HTTPClient: &http.Client{
-			Timeout: 300 * time.Second,
+			Timeout: 430 * time.Second, // 略大于 ResponseHeaderTimeout，确保完整流程
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{
 					Timeout: 10 * time.Second,
