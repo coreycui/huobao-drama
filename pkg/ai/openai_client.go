@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -87,7 +88,13 @@ func NewOpenAIClient(baseURL, apiKey, model, endpoint string) *OpenAIClient {
 		Model:    model,
 		Endpoint: endpoint,
 		HTTPClient: &http.Client{
-			Timeout: 10 * time.Minute,
+			Timeout: 120 * time.Second,
+			Transport: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout: 10 * time.Second,
+				}).DialContext,
+				ResponseHeaderTimeout: 60 * time.Second,
+			},
 		},
 	}
 }
