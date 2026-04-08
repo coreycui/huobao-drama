@@ -18,12 +18,15 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="选择图片" prop="image_gen_id">
+      <el-form-item label="选择图片" prop="image_gen_ids">
         <el-select
-          v-model="form.image_gen_id"
-          placeholder="选择已生成的图片"
+          v-model="form.image_gen_ids"
+          placeholder="选择图片（支持多选，2-9张触发多图模式）"
+          multiple
+          collapse-tags
+          collapse-tags-tooltip
           clearable
-          @change="onImageChange"
+          @change="onImagesChange"
         >
           <el-option
             v-for="image in images"
@@ -37,15 +40,7 @@
             </div>
           </el-option>
         </el-select>
-        <div class="form-tip">或直接输入图片 URL</div>
-      </el-form-item>
-
-      <el-form-item label="图片 URL" prop="image_url">
-        <el-input
-          v-model="form.image_url"
-          placeholder="https://example.com/image.jpg"
-          :disabled="!!form.image_gen_id"
-        />
+        <div class="form-tip">支持多选，2-9张触发 Seedance 多图模式</div>
       </el-form-item>
 
       <el-form-item label="视频提示词" prop="prompt">
@@ -163,10 +158,9 @@ const generating = ref(false)
 const dramas = ref<Drama[]>([])
 const images = ref<ImageGeneration[]>([])
 
-const form = reactive<GenerateVideoRequest & { image_gen_id?: number }>({
+const form = reactive<GenerateVideoRequest & { image_gen_ids?: number[] }>({
   drama_id: props.dramaId || '',
-  image_gen_id: undefined,
-  image_url: '',
+  image_gen_ids: [],
   prompt: '',
   provider: 'doubao',
   duration: 5,
@@ -234,7 +228,7 @@ const loadImages = async (dramaId: string) => {
 }
 
 const onDramaChange = (dramaId: string) => {
-  form.image_gen_id = undefined
+  form.image_gen_ids = []
   form.image_url = ''
   images.value = []
   if (dramaId) {
@@ -242,16 +236,16 @@ const onDramaChange = (dramaId: string) => {
   }
 }
 
-const onImageChange = (imageGenId: number | undefined) => {
-  if (!imageGenId) {
+const onImagesChange = (imageGenIds: number[] | undefined) => {
+  if (!imageGenIds || imageGenIds.length === 0) {
     form.image_url = ''
     return
   }
   
-  const image = images.value.find(img => img.id === imageGenId)
-  if (image && image.image_url) {
-    form.image_url = image.image_url
-    form.prompt = image.prompt
+  // 取第一张图的 prompt 作为默认提示词
+  const firstImage = images.value.find(img => img.id === imageGenIds[0])
+  if (firstImage && firstImage.prompt) {
+    form.prompt = firstImage.prompt
   }
 }
 
@@ -282,23 +276,41 @@ const handleGenerate = async () => {
     console.log('Starting video generation...', form)
     
     try {
-      if (form.image_gen_id) {
-        console.log('Generating from image:', form.image_gen_id)
-        await videoAPI.generateFromImage(form.image_gen_id)
-      } else {
+      // 处理图片参数
+      if (form.image_gen_ids && form.image_gen_ids.length > 0) {
+        // 选中的图片，转换成 URL 列表
+        const selectedImages = images.value.filter(img => form.image_gen_ids!.includes(img.id))
+        const urls = selectedImages.map(img => img.image_url).filter(Boolean) as string[]
+        
         const params: GenerateVideoRequest = {
           drama_id: form.drama_id,
           prompt: form.prompt,
           provider: form.provider
         }
 
-        // 判断参考图模式
-        if (form.image_url && form.image_url.trim()) {
-          params.image_url = form.image_url
+        if (urls.length === 1) {
+          params.image_url = urls[0]
           params.reference_mode = 'single'
-        } else {
-          // 纯文本生成，无参考图
-          params.reference_mode = 'none'
+        } else if (urls.length >= 2) {
+          params.reference_image_urls = urls
+          params.reference_mode = 'multiple'
+        }
+
+        if (form.duration) params.duration = form.duration
+        if (form.aspect_ratio) params.aspect_ratio = form.aspect_ratio
+        if (form.motion_level !== undefined) params.motion_level = form.motion_level
+        if (form.camera_motion) params.camera_motion = form.camera_motion
+        if (form.style) params.style = form.style
+        if (form.seed && form.seed > 0) params.seed = form.seed
+
+        console.log('Generating video with params:', params)
+        await videoAPI.generateVideo(params)
+      } else {
+        const params: GenerateVideoRequest = {
+          drama_id: form.drama_id,
+          prompt: form.prompt,
+          provider: form.provider,
+          reference_mode: 'none'
         }
 
         if (form.duration) params.duration = form.duration
