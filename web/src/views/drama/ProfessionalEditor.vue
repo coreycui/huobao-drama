@@ -2230,6 +2230,20 @@ const defaultModelCapabilities: Record<
     supportTextOnly: true,
     maxImages: 1,
   },
+  "doubao-seedance-2-0-260128": {
+    supportSingleImage: true,
+    supportMultipleImages: true,
+    supportFirstLastFrame: false,
+    supportTextOnly: true,
+    maxImages: 9,
+  },
+  "doubao-seedance-2-0-fast-260128": {
+    supportSingleImage: true,
+    supportMultipleImages: true,
+    supportFirstLastFrame: false,
+    supportTextOnly: true,
+    maxImages: 9,
+  },
   "sora-2": {
     supportSingleImage: true,
     supportMultipleImages: false,
