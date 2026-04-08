@@ -167,7 +167,8 @@ func (c *OpenAIClient) doChatRequest(req *ChatCompletionRequest) (*ChatCompletio
 	if len(jsonData) > 300 {
 		requestPreview = string(jsonData[:300]) + "..."
 	}
-	fmt.Printf("OpenAI: Request body: %s\n", requestPreview)
+	fullRequestJSON := string(jsonData)
+	fmt.Printf("OpenAI: Request body (full, len=%d): %s\n", len(jsonData), fullRequestJSON)
 
 	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
