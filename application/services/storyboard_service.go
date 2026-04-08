@@ -359,13 +359,13 @@ func (s *StoryboardService) processStoryboardGeneration(taskID, episodeID, model
 	var text string
 	var err error
 	if model != "" {
-		s.log.Infow("Using specified model for storyboard generation", "model", model, "task_id", taskID)
+		s.log.Infow("Using specified model for storyboard generation", "model", model, "prompt_length", len(prompt), "task_id", taskID)
 		client, getErr := s.aiService.GetAIClientForModel("text", model)
 		if getErr != nil {
 			s.log.Warnw("Failed to get client for specified model, using default", "model", model, "error", getErr, "task_id", taskID)
 			text, err = s.aiService.GenerateText(prompt, "", ai.WithMaxTokens(16000))
 		} else {
-			text, err = client.GenerateText(prompt, "", ai.WithMaxTokens(16000))
+			text, err = client.GenerateText(prompt, "", ai.WithMaxTokens(16000), ai.WithThinkingDisabled(), ai.WithResponseFormatJSON())
 		}
 	} else {
 		text, err = s.aiService.GenerateText(prompt, "", ai.WithMaxTokens(16000))
