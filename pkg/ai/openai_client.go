@@ -100,7 +100,7 @@ func NewOpenAIClient(baseURL, apiKey, model, endpoint string) *OpenAIClient {
 				DialContext: (&net.Dialer{
 					Timeout: 10 * time.Second,
 				}).DialContext,
-				ResponseHeaderTimeout: 180 * time.Second,
+				ResponseHeaderTimeout: 280 * time.Second,
 				TLSNextProto: map[string]func(authority string, c *tls.Conn) http.RoundTripper{},
 			},
 		},
