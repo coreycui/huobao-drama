@@ -335,6 +335,11 @@ const providerConfigs: Record<AIServiceType, ProviderConfig[]> = {
       name: "Google Gemini",
       models: ["gemini-2.5-pro", "gemini-3-flash-preview"],
     },
+    {
+      id: "doubao",
+      name: "火山引擎",
+      models: ["doubao-seed-1-8-251228"],
+    },
   ],
   image: [
     {
@@ -666,6 +671,8 @@ const handleProviderChange = () => {
     form.base_url = "https://generativelanguage.googleapis.com";
   } else if (form.provider === "minimax") {
     form.base_url = "https://api.minimaxi.com/v1";
+  } else if (form.provider === "doubao") {
+    form.base_url = "https://ark.cn-beijing.volces.com/api/v3";
   } else if (form.provider === "volces" || form.provider === "volcengine") {
     form.base_url = "https://ark.cn-beijing.volces.com/api/v3";
   } else if (form.provider === "openai") {

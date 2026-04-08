@@ -422,6 +422,9 @@ func (s *AIService) GenerateText(prompt string, systemPrompt string, options ...
 		return "", fmt.Errorf("failed to get AI client: %w", err)
 	}
 
+	// 添加 JSON 结构化输出支持
+	options = append(options, ai.WithResponseFormatJSON())
+
 	return client.GenerateText(prompt, systemPrompt, options...)
 }
 

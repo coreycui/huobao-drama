@@ -25,13 +25,18 @@ type ChatMessage struct {
 }
 
 type ChatCompletionRequest struct {
-	Model               string        `json:"model"`
-	Messages            []ChatMessage `json:"messages"`
-	Temperature         float64       `json:"temperature,omitempty"`
-	MaxTokens           *int          `json:"max_tokens,omitempty"`
-	MaxCompletionTokens *int          `json:"max_completion_tokens,omitempty"`
-	TopP                float64       `json:"top_p,omitempty"`
-	Stream              bool          `json:"stream,omitempty"`
+	Model               string          `json:"model"`
+	Messages            []ChatMessage    `json:"messages"`
+	Temperature         float64         `json:"temperature,omitempty"`
+	MaxTokens           *int            `json:"max_tokens,omitempty"`
+	MaxCompletionTokens *int            `json:"max_completion_tokens,omitempty"`
+	TopP                float64         `json:"top_p,omitempty"`
+	Stream              bool            `json:"stream,omitempty"`
+	ResponseFormat      *ResponseFormat `json:"response_format,omitempty"`
+}
+
+type ResponseFormat struct {
+	Type string `json:"type"` // "text" or "json_object"
 }
 
 type ChatCompletionResponse struct {
@@ -244,6 +249,12 @@ func WithTopP(topP float64) func(*ChatCompletionRequest) {
 	}
 }
 
+func WithResponseFormatJSON() func(*ChatCompletionRequest) {
+	return func(req *ChatCompletionRequest) {
+		req.ResponseFormat = &ResponseFormat{Type: "json_object"}
+	}
+}
+
 func (c *OpenAIClient) GenerateText(prompt string, systemPrompt string, options ...func(*ChatCompletionRequest)) (string, error) {
 	messages := []ChatMessage{}
 
@@ -258,6 +269,20 @@ func (c *OpenAIClient) GenerateText(prompt string, systemPrompt string, options 
 		Role:    "user",
 		Content: prompt,
 	})
+
+	// 如果没有设置 temperature，默认给 0.7
+	hasTemp := false
+	for _, opt := range options {
+		tempReq := &ChatCompletionRequest{}
+		opt(tempReq)
+		if tempReq.Temperature != 0 {
+			hasTemp = true
+			break
+		}
+	}
+	if !hasTemp {
+		options = append(options, WithTemperature(0.7))
+	}
 
 	resp, err := c.ChatCompletion(messages, options...)
 	if err != nil {
