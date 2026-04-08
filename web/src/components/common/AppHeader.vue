@@ -32,7 +32,7 @@
             </el-button>
           </router-link>
           <!-- AI Config (Model Switch) | AI 配置（模型切换） -->
-          <el-button v-if="showAIConfig" @click="handleOpenAIConfig" class="header-btn">
+          <el-button v-if="showAIConfig && authStore.isAdmin" @click="handleOpenAIConfig" class="header-btn">
             <el-icon><Setting /></el-icon>
             <span class="btn-text">{{ $t('drama.aiConfig') }}</span>
           </el-button>
