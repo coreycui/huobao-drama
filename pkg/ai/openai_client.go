@@ -98,7 +98,7 @@ func NewOpenAIClient(baseURL, apiKey, model, endpoint string) *OpenAIClient {
 				DialContext: (&net.Dialer{
 					Timeout: 10 * time.Second,
 				}).DialContext,
-				ResponseHeaderTimeout: 60 * time.Second,
+				ResponseHeaderTimeout: 180 * time.Second,
 			},
 		},
 	}
@@ -165,6 +165,9 @@ func (c *OpenAIClient) doChatRequest(req *ChatCompletionRequest) (*ChatCompletio
 	fmt.Printf("OpenAI: Executing HTTP request...\n")
 	resp, err := c.HTTPClient.Do(httpReq)
 	if err != nil {
+		if strings.Contains(err.Error(), "timeout awaiting response headers") {
+			fmt.Printf("OpenAI: ⚠️ ResponseHeaderTimeout 180s exceeded for URL: %s\n", url)
+		}
 		fmt.Printf("OpenAI: HTTP request failed: %v\n", err)
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
